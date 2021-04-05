@@ -11,12 +11,18 @@ namespace RaidExtractor.Core.Native
         public static int UserArtifactDataArtifacts = 0x28; // UserArtifactData.Artifactsa
         public static int UserArtifactArtifactDataByHeroId = 0x30; // UserArtifactData.ArtifactDataByHeroId
 
+        public static int AppModelStaticDataManager = 0x60; // AppModel.ClientStaticDataManager
         public static int AppModelUserWrapper = 0x158; // AppModel._userWrapper
 
         public static int UserWrapperHeroes = 0x28; // UserWrapper.Heroes
         public static int UserWrapperShards = 0x70; // UserWrapper.Shards
         public static int UserWrapperArena = 0xB0; // UserWrapper.Arena
         public static int UserWrapperCapitol = 0xC8; // UserWrapper.Capitol
+
+        public static int ClientStaticDataManagerClientStaticData = 0x18; // ClientStaticDataManager.ClientStaticData // TODO: Rename to StaticData
+
+        public static int StaticDataHeroData = 0x10; // TODO: StaticData.HeroData
+        public static int HeroDataHeroTypes= 0x10;// TODO: HeroData.HeroDataHeroTypes
 
         public static int HeroesWrapperArtifactData = 0x60; // HeroesWrapperReadOnly.ArtifactData
         public static int HeroesWrapperHeroData = 0x50; // HeroesWrapperReadOnly.HeroData

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using ProcessMemoryUtilities.Managed;
 using ProcessMemoryUtilities.Native;
@@ -62,6 +63,83 @@ namespace RaidExtractor.Core
                 NativeWrapper.ReadProcessMemory(handle, appModel + 0x0, ref appModel);
                 NativeWrapper.ReadProcessMemory(handle, appModel + 0xB8, ref appModel);
                 NativeWrapper.ReadProcessMemory(handle, appModel + 0x8, ref appModel);
+
+#region Static Data Extraction
+
+                var staticData = appModel;
+                //var staticDataStruct = new StaticDataStruct();
+
+                NativeWrapper.ReadProcessMemory(handle, staticData + RaidStaticInformation.AppModelStaticDataManager, ref staticData); // AppModel.ClientStaticDataManager
+                NativeWrapper.ReadProcessMemory(handle, staticData + RaidStaticInformation.ClientStaticDataManagerClientStaticData, ref staticData); // ClientStaticDataManager.ClientStaticData
+
+                NativeWrapper.ReadProcessMemory(handle, staticData + RaidStaticInformation.StaticDataHeroData, ref staticData); // StaticData.HeroData
+                NativeWrapper.ReadProcessMemory(handle, staticData + RaidStaticInformation.HeroDataHeroTypes, ref staticData); // HeroData.HeroTypes
+
+                var heroTypesDataPointer = staticData;
+                var heroTypeCount = 0;
+                NativeWrapper.ReadProcessMemory(handle, heroTypesDataPointer + 0x18, ref heroTypeCount); // List<HeroTypes>._size
+                NativeWrapper.ReadProcessMemory(handle, heroTypesDataPointer + 0x10, ref heroTypesDataPointer); // List<HeroTypes>._items
+
+                var heroTypeStruct = new StaticHeroTypeStruct();
+                var heroTypeList = new List<HeroType>();
+
+                for (var i = 0; i < heroTypeCount; i++)
+                {
+                    var heroPointer = heroTypesDataPointer + 0x20 + 0x8 * i;
+                    NativeWrapper.ReadProcessMemory(handle, heroPointer, ref heroPointer);
+                    NativeWrapper.ReadProcessMemory(handle, heroPointer, ref heroTypeStruct);
+
+                    var battleStatsStruct = new StaticBattleStatsStruct();
+                    var sharedLTextKeyStruct = new SharedLTextKeyStruct();
+
+                    var stringPointer = IntPtr.Zero;
+                    var stringLength = 0;
+                    var stringValue = "";
+
+                    NativeWrapper.ReadProcessMemory(handle, heroTypeStruct.BaseStats, ref battleStatsStruct);
+                    NativeWrapper.ReadProcessMemory(handle, heroTypeStruct.Name, ref sharedLTextKeyStruct);
+
+                    stringPointer = sharedLTextKeyStruct.DefaultValue;
+                    NativeWrapper.ReadProcessMemory(handle, stringPointer + 0x10, ref stringLength);
+
+                    stringLength *= 2; // We're dealing with Unicode string here
+
+                    var stringSize = new IntPtr(stringLength);
+                    IntPtr unmanagedPointer = Marshal.AllocHGlobal(stringLength);
+                    NativeWrapper.ReadProcessMemory(handle, stringPointer + 0x14, unmanagedPointer, stringSize);
+                    var byteArray = new byte[stringLength];
+                    Marshal.Copy(unmanagedPointer, byteArray, 0, stringLength);
+                    var heroName = System.Text.Encoding.Unicode.GetString(byteArray);
+
+                    Marshal.FreeHGlobal(unmanagedPointer);
+                    //var xz = Marshal.PtrToStringAuto(sharedLTextKeyStruct.DefaultValue + 0x14);
+                    
+
+                    var heroType = new HeroType()
+                    {
+                        Fraction = heroTypeStruct.Fraction.ToString(),
+                        Rarity = heroTypeStruct.Rarity.ToString(),
+                        Role = heroTypeStruct.Role.ToString(),
+                        Element = heroTypeStruct.Element.ToString(),
+                        // TODO: Add all properties
+                        Id = heroTypeStruct.Id,
+                        Accuracy = battleStatsStruct.Accuracy.ToInt(),
+                        Attack = battleStatsStruct.Attack.ToInt(),
+                        CriticalChance = battleStatsStruct.CriticalChance.ToInt(),
+                        CriticalDamage = battleStatsStruct.CriticalDamage.ToInt(),
+                        CriticalHeal = battleStatsStruct.CriticalHeal.ToInt(),
+                        Defense = battleStatsStruct.Defence.ToInt(),
+                        Health = battleStatsStruct.Health.ToInt(),
+                        Resistance = battleStatsStruct.Resistance.ToInt(),
+                        Speed = battleStatsStruct.Speed.ToInt(),
+                        Name = heroName,
+
+                    };
+                    heroTypeList.Add(heroType);
+
+                }
+
+#endregion
 
                 var userWrapper = appModel;
                 NativeWrapper.ReadProcessMemory(handle, userWrapper + RaidStaticInformation.AppModelUserWrapper, ref userWrapper); // AppModel._userWrapper
@@ -305,7 +383,8 @@ namespace RaidExtractor.Core
                 return new AccountDump
                 {
                     Artifacts = artifacts,
-                    Heroes = heroes
+                    Heroes = heroes,
+                    HeroTypes = heroTypeList
                 };
             }
             finally

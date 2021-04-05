@@ -5,6 +5,7 @@
 //----------------------
 
 using System.Collections.Generic;
+using RaidExtractor.Core.Native;
 
 #pragma warning disable 108 // Disable "CS0108 '{derivedDto}.ToJson()' hides inherited member '{dtoBase}.ToJson()'. Use the new keyword if hiding was intended."
 #pragma warning disable 114 // Disable "CS0114 '{derivedDto}.RaisePropertyChanged(String)' hides inherited member 'dtoBase.RaisePropertyChanged(String)'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword."
@@ -292,6 +293,8 @@ namespace RaidExtractor.Core
         [Newtonsoft.Json.JsonProperty("heroes", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.ICollection<Hero> Heroes { get; set; }
 
+        [Newtonsoft.Json.JsonProperty("hero_types", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public System.Collections.Generic.ICollection<HeroType> HeroTypes { get; set; }
 
     }
 

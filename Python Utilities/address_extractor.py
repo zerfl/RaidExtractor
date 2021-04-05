@@ -6,7 +6,11 @@ import sys, os
 
 findclasslist = {
     'public class AppModel : SingleInstance<AppModel>': [{
+        'private ClientStaticDataManager <StaticDataManager>': '        public static int AppModelStaticDataManager = {}; // AppModel.ClientStaticDataManager\n',
         'private UserWrapper _userWrapper;': '        public static int AppModelUserWrapper = {}; // AppModel._userWrapper\n',
+    }],
+    'public class ClientStaticDataManager ': [{
+        'private ClientStaticData <StaticData>': '        public static int ClientStaticDataManagerClientStaticData = {}; // ClientStaticDataManager.ClientStaticData\n',
     }],
     'public class UserWrapper ': [{
         'public readonly HeroesWrapper Heroes;': '        public static int UserWrapperHeroes = {}; // UserWrapper.Heroes\n',
